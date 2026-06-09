@@ -1,0 +1,365 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearnPath - HTML Structure Basics</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font-sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --color-background-primary:#fff;
+  --color-background-secondary:#f7f7f8;
+  --color-background-tertiary:#eeeef1;
+  --color-border-secondary:#c8c8ce;
+  --color-border-tertiary:#e2e2e6;
+  --color-text-primary:#1f1f23;
+  --color-text-secondary:#5f6068;
+  --color-text-tertiary:#85868f;
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+body{min-height:100vh;padding:24px;background:#f5f5f7;font-family:var(--font-sans);color:var(--color-text-primary)}
+.ti{display:inline-flex;width:1em;align-items:center;justify-content:center;font-style:normal;line-height:1}
+.ti-book-2::before{content:"\25A1"}
+.ti-code::before{content:"</>"}
+.ti-eye::before{content:"\25C9"}
+.ti-info-circle::before{content:"i"}
+button,textarea{font:inherit}
+button{border:1px solid var(--color-border-secondary);border-radius:7px;padding:7px 12px;background:var(--color-background-primary);color:var(--color-text-primary);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+button:hover:not(:disabled){background:var(--color-background-tertiary);border-color:#aaaab2;transform:translateY(-1px)}
+button:focus-visible,textarea:focus-visible{outline:3px solid rgba(127,119,221,.25);outline-offset:-3px}
+button:disabled{cursor:not-allowed;opacity:.45}
+#btn-next{background:#7F77DD;border-color:#7F77DD;color:#fff}
+#btn-next:hover:not(:disabled){background:#6c64c7;border-color:#6c64c7}
+.ex-shell{width:min(100%,1100px);height:min(720px,calc(100vh - 48px));min-height:540px;margin:0 auto;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary);box-shadow:0 18px 50px rgba(31,31,35,.08);display:flex;flex-direction:column}
+.ex-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.ex-meta{display:flex;align-items:center;gap:10px}
+.back-link{border:0;padding:5px 7px;background:transparent;color:var(--color-text-secondary);font-size:12px;text-decoration:none;border-radius:6px}
+.back-link:hover{background:var(--color-background-tertiary);color:var(--color-text-primary)}
+.ex-badge{font-size:11px;padding:3px 8px;border-radius:999px;background:#FAECE7;color:#712B13;font-weight:500}
+.ex-title{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.step-dots{display:flex;gap:6px;align-items:center}
+.topbar-game{display:flex;align-items:center;gap:10px}
+.xp-chip{padding:4px 8px;border-radius:999px;background:#EEEDFE;color:#534AB7;font-size:11px;font-weight:650;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--color-border-secondary);transition:background .2s}
+.dot.active{background:#D85A30}
+.dot.done{background:#639922}
+.body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);flex:1;min-height:0}
+.panel{display:flex;flex-direction:column;overflow:hidden}
+.panel+.panel{border-left:0.5px solid var(--color-border-tertiary)}
+.panel-header{font-size:11px;font-weight:500;color:var(--color-text-tertiary);padding:8px 14px;border-bottom:0.5px solid var(--color-border-tertiary);letter-spacing:.04em;text-transform:uppercase;background:var(--color-background-secondary);display:flex;align-items:center;gap:6px}
+.lesson-body{padding:18px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px;background:#fbfbfc}
+.concept-card{border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;background:var(--color-background-primary)}
+.concept-top{padding:10px 12px;background:var(--color-background-secondary)}
+.concept-top p{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.concept-top code{font-family:var(--font-mono);font-size:12px;background:var(--color-background-tertiary);padding:1px 5px;border-radius:4px;color:var(--color-text-primary)}
+.code-block{font-family:var(--font-mono);font-size:12px;padding:10px 12px;background:#1e1e2e;color:#cdd6f4;line-height:1.7;overflow-x:auto}
+.code-block .tag{color:#89b4fa}
+.code-block .attr{color:#cba6f7}
+.code-block .val{color:#a6e3a1}
+.code-block .txt{color:#cdd6f4}
+.code-block .comment{color:#6c7086;font-style:italic}
+.task-card{border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:14px;background:var(--color-background-primary)}
+.task-card p{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.task-card strong{font-weight:500;color:var(--color-text-primary)}
+.task-hints{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.hint-pill{font-size:11px;font-family:var(--font-mono);background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);padding:2px 8px;border-radius:999px;color:var(--color-text-secondary);cursor:pointer;transition:background .15s}
+.hint-pill:hover{background:var(--color-background-tertiary)}
+.right-panel{display:flex;flex-direction:column}
+.editor-area{flex:1;display:flex;flex-direction:column}
+textarea{flex:1;width:100%;border:none;outline:none;resize:none;font-family:var(--font-mono);font-size:12px;padding:12px 14px;background:#1e1e2e;color:#cdd6f4;line-height:1.7;min-height:180px}
+.preview-section{border-top:0.5px solid var(--color-border-tertiary);flex-shrink:0}
+.preview-body{padding:14px;min-height:96px;font-size:13px;line-height:1.7;color:var(--color-text-primary);overflow-y:auto;max-height:150px;background:#fff}
+.preview-body h1{font-size:18px;font-weight:500;margin-bottom:4px;color:var(--color-text-primary)}
+.preview-body p{font-size:13px;margin-bottom:4px;color:var(--color-text-secondary)}
+.preview-body ul{padding-left:18px;font-size:13px;color:var(--color-text-secondary)}
+.preview-body strong{font-weight:500;color:var(--color-text-primary)}
+.feedback{padding:8px 14px;font-size:12px;min-height:32px;display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--color-border-tertiary)}
+.feedback.ok{color:#3B6D11;background:#EAF3DE}
+.feedback.err{color:#A32D2D;background:#FCEBEB}
+.feedback.idle{color:var(--color-text-tertiary)}
+.ex-footer{border-top:0.5px solid var(--color-border-tertiary);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--color-background-secondary)}
+.ex-footer span{font-size:12px;color:var(--color-text-tertiary)}
+.nav-btns{display:flex;gap:8px}
+.attempt-meta{display:flex;align-items:center;gap:12px}
+.attempt-meta span{white-space:nowrap}
+.completion-overlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(31,31,35,.45);backdrop-filter:blur(4px)}
+.completion-overlay.visible{display:flex}
+.completion-card{width:min(100%,420px);padding:26px;border-radius:16px;background:#fff;box-shadow:0 24px 70px rgba(31,31,35,.25);text-align:center}
+.completion-icon{width:58px;height:58px;margin:0 auto 14px;border-radius:18px;background:#EAF3DE;color:#3B6D11;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700}
+.completion-card h2{font-size:20px;margin-bottom:6px}
+.completion-card>p{font-size:13px;line-height:1.55;color:var(--color-text-secondary)}
+.earned-xp{margin:16px 0 8px;font-size:25px;font-weight:750;color:#534AB7}
+.earned-xp small{display:block;margin-top:2px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-tertiary)}
+.result-stars{font-size:28px;color:#E59B18;letter-spacing:3px}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.result-item{padding:10px 6px;border-radius:8px;background:var(--color-background-secondary)}
+.result-item span{display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;color:var(--color-text-tertiary)}
+.result-item strong{font-size:13px}
+.completion-actions{display:flex;gap:8px}
+.completion-actions button{flex:1;padding:9px}
+.completion-actions .primary{background:#7F77DD;border-color:#7F77DD;color:#fff}
+.shake{animation:shake .25s linear}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+@media (max-width:760px){
+  body{padding:0;background:var(--color-background-primary)}
+  .ex-shell{width:100%;height:auto;min-height:100vh;border:0;border-radius:0;box-shadow:none}
+  .ex-topbar{align-items:flex-start;gap:12px}
+  .ex-meta{align-items:flex-start;flex-direction:column;gap:6px}
+  .ex-title{line-height:1.4}
+  .body{grid-template-columns:1fr}
+  .panel{min-height:420px}
+  .panel+.panel{border-left:0;border-top:1px solid var(--color-border-tertiary)}
+  .right-panel{min-height:520px}
+  .ex-footer{position:sticky;bottom:0;z-index:2}
+  .topbar-game{align-items:flex-end;flex-direction:column}
+  .attempt-meta{gap:6px;flex-direction:column;align-items:flex-start}
+  .completion-actions{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="ex-shell">
+  <div class="ex-topbar">
+    <div class="ex-meta">
+      <a class="back-link" href="lms_learning_journey_mockup.html#html-beginner">← Exercises</a>
+      <span class="ex-badge">HTML</span>
+      <span class="ex-title">Exercise 1 — Tags, elements & attributes</span>
+    </div>
+    <div class="topbar-game">
+      <span class="xp-chip" id="xp-chip">Level 2 · 340 XP</span>
+      <div class="step-dots">
+        <div class="dot active" id="d0"></div>
+        <div class="dot" id="d1"></div>
+        <div class="dot" id="d2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="panel">
+      <div class="panel-header"><i class="ti ti-book-2" aria-hidden="true"></i> Lesson</div>
+      <div class="lesson-body" id="lesson-body"></div>
+    </div>
+
+    <div class="panel right-panel">
+      <div class="panel-header"><i class="ti ti-code" aria-hidden="true"></i> Your code</div>
+      <div class="editor-area">
+        <textarea id="editor" spellcheck="false" oninput="updatePreview()"></textarea>
+      </div>
+      <div class="preview-section">
+        <div class="panel-header"><i class="ti ti-eye" aria-hidden="true"></i> Preview</div>
+        <div class="preview-body" id="preview"></div>
+        <div class="feedback idle" id="feedback"><i class="ti ti-info-circle" aria-hidden="true"></i> <span id="fb-text">Start typing to see your output</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ex-footer">
+    <div class="attempt-meta">
+      <span id="step-label">Step 1 of 3</span>
+      <span id="attempt-stats">0 hints · 0 mistakes</span>
+    </div>
+    <div class="nav-btns">
+      <button onclick="prevStep()" id="btn-prev" disabled>← Back</button>
+      <button onclick="nextStep()" id="btn-next">Next →</button>
+    </div>
+  </div>
+</div>
+
+<div class="completion-overlay" id="completion-overlay" role="dialog" aria-modal="true" aria-labelledby="completion-title">
+  <div class="completion-card">
+    <div class="completion-icon">✓</div>
+    <h2 id="completion-title">Exercise complete</h2>
+    <p>Your result is based on hints used, mistakes, and completion time.</p>
+    <div class="earned-xp" id="earned-xp">+0 XP<small>earned this attempt</small></div>
+    <div class="result-stars" id="result-stars">☆☆☆</div>
+    <div class="result-grid">
+      <div class="result-item"><span>Time</span><strong id="result-time">--</strong></div>
+      <div class="result-item"><span>Hints</span><strong id="result-hints">0</strong></div>
+      <div class="result-item"><span>Mistakes</span><strong id="result-mistakes">0</strong></div>
+    </div>
+    <div class="completion-actions">
+      <button onclick="retryExercise()">Try again</button>
+      <button class="primary" onclick="window.location.href='lms_learning_journey_mockup.html#html-beginner'">View progress</button>
+    </div>
+  </div>
+</div>
+
+<script src="gamification.js"></script>
+<script>
+const steps = [
+  {
+    title: "What is an HTML tag?",
+    concept: "HTML uses <strong>tags</strong> to mark up content. Most tags come in pairs — an opening tag and a closing tag — wrapping the content between them.",
+    example: `<span class="tag">&lt;h1&gt;</span><span class="txt">Hello, world!</span><span class="tag">&lt;/h1&gt;</span>\n<span class="tag">&lt;p&gt;</span><span class="txt">This is a paragraph.</span><span class="tag">&lt;/p&gt;</span>`,
+    task: "Write an <code>&lt;h1&gt;</code> tag with your name as the content, and a <code>&lt;p&gt;</code> tag below it saying what you're learning.",
+    hints: ["<h1>", "</h1>", "<p>", "</p>"],
+    starter: "<h1></h1>\n<p></p>",
+    check: (v) => {
+      const hasH1 = /<h1>[^<]+<\/h1>/i.test(v);
+      const hasP = /<p>[^<]+<\/p>/i.test(v);
+      if (hasH1 && hasP) return { ok: true, msg: "Both tags look good!" };
+      if (!hasH1) return { ok: false, msg: "Add content inside your <h1> tag." };
+      return { ok: false, msg: "Add content inside your <p> tag." };
+    }
+  },
+  {
+    title: "Attributes",
+    concept: "Tags can have <strong>attributes</strong> — extra information written inside the opening tag. They follow the pattern <code>name=\"value\"</code>.",
+    example: `<span class="tag">&lt;a </span><span class="attr">href</span>=<span class="val">"https://example.com"</span><span class="tag">&gt;</span><span class="txt">Visit site</span><span class="tag">&lt;/a&gt;</span>\n<span class="tag">&lt;img </span><span class="attr">src</span>=<span class="val">"cat.jpg"</span> <span class="attr">alt</span>=<span class="val">"A cat"</span><span class="tag">&gt;</span>`,
+    task: "Write an <code>&lt;a&gt;</code> link tag with an <code>href</code> attribute pointing to <code>https://example.com</code> and any link text you like.",
+    hints: ['<a href="">', "</a>", 'href="..."'],
+    starter: '<a href="">Click here</a>',
+    check: (v) => {
+      const hasHref = /<a\s+href=["'][^"']+["'][^>]*>[^<]+<\/a>/i.test(v);
+      if (hasHref) return { ok: true, msg: "Correct! That's a valid anchor element." };
+      return { ok: false, msg: 'Make sure <a> has an href attribute with a URL.' };
+    }
+  },
+  {
+    title: "Nesting elements",
+    concept: "Tags can be <strong>nested</strong> inside each other to build structure. The inner tag must be closed before the outer one closes.",
+    example: `<span class="tag">&lt;ul&gt;</span>\n  <span class="tag">&lt;li&gt;</span><span class="txt">HTML</span><span class="tag">&lt;/li&gt;</span>\n  <span class="tag">&lt;li&gt;</span><span class="txt">CSS</span><span class="tag">&lt;/li&gt;</span>\n<span class="tag">&lt;/ul&gt;</span>`,
+    task: "Write a <code>&lt;ul&gt;</code> (unordered list) with at least 3 <code>&lt;li&gt;</code> items — use the topics in your learning journey!",
+    hints: ["<ul>", "</ul>", "<li>", "</li>"],
+    starter: "<ul>\n  <li></li>\n  <li></li>\n  <li></li>\n</ul>",
+    check: (v) => {
+      const lis = (v.match(/<li>[^<]+<\/li>/gi) || []).length;
+      if (lis >= 3) return { ok: true, msg: `${lis} list items — structure looks great!` };
+      if (lis > 0) return { ok: false, msg: `Add ${3 - lis} more <li> item(s) with content.` };
+      return { ok: false, msg: "Add <li> items with content inside the <ul>." };
+    }
+  }
+];
+
+let current = 0;
+let hintsUsed = 0;
+let mistakes = 0;
+let startedAt = Date.now();
+
+function hintClick(tag) {
+  const ed = document.getElementById('editor');
+  const pos = ed.selectionStart;
+  const val = ed.value;
+  ed.value = val.slice(0,pos) + tag + val.slice(pos);
+  ed.selectionStart = ed.selectionEnd = pos + tag.length;
+  ed.focus();
+  hintsUsed++;
+  renderAttemptStats();
+  updatePreview();
+}
+
+function renderLesson(i) {
+  const s = steps[i];
+  document.getElementById('lesson-body').innerHTML = `
+    <div class="concept-card">
+      <div class="concept-top"><p>${s.concept}</p></div>
+      <div class="code-block">${s.example}</div>
+    </div>
+    <div class="task-card">
+      <p><strong>Your turn:</strong> ${s.task}</p>
+      <div class="task-hints">${s.hints.map(h=>`<span class="hint-pill" onclick="hintClick('${h.replace(/'/g,"\\'")}')">${h.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`).join('')}</div>
+    </div>`;
+  document.getElementById('editor').value = s.starter;
+  document.getElementById('step-label').textContent = `Step ${i+1} of ${steps.length}`;
+  document.querySelectorAll('.dot').forEach((d,j)=>{
+    d.classList.remove('active','done');
+    if(j<i) d.classList.add('done');
+    else if(j===i) d.classList.add('active');
+  });
+  document.getElementById('btn-prev').disabled = i===0;
+  document.getElementById('btn-next').textContent = i===steps.length-1 ? 'Finish ↗' : 'Next →';
+  updatePreview();
+}
+
+function updatePreview() {
+  const val = document.getElementById('editor').value;
+  document.getElementById('preview').innerHTML = val;
+  const res = steps[current].check(val);
+  const fb = document.getElementById('feedback');
+  const ft = document.getElementById('fb-text');
+  fb.className = 'feedback ' + (res.ok ? 'ok' : (val.trim().length > 4 ? 'err' : 'idle'));
+  ft.textContent = res.ok ? res.msg : (val.trim().length > 4 ? res.msg : 'Start typing to see your output');
+}
+
+function nextStep() {
+  const value = document.getElementById('editor').value;
+  const result = steps[current].check(value);
+  if (!result.ok) {
+    mistakes++;
+    renderAttemptStats();
+    const feedback = document.getElementById('feedback');
+    feedback.classList.remove('shake');
+    void feedback.offsetWidth;
+    feedback.classList.add('shake');
+    document.getElementById('fb-text').textContent = result.msg;
+    return;
+  }
+  if(current === steps.length-1) {
+    completeExercise();
+    return;
+  }
+  current++;
+  renderLesson(current);
+}
+
+function prevStep() {
+  if(current>0){ current--; renderLesson(current); }
+}
+
+function renderAttemptStats() {
+  document.getElementById('attempt-stats').textContent = `${hintsUsed} hint${hintsUsed === 1 ? '' : 's'} · ${mistakes} mistake${mistakes === 1 ? '' : 's'}`;
+}
+
+function calculateStars() {
+  if (hintsUsed === 0 && mistakes === 0) return 3;
+  if (hintsUsed <= 2 && mistakes <= 3) return 2;
+  return 1;
+}
+
+function completeExercise() {
+  const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+  const stars = calculateStars();
+  const result = LearnPathGame.completeExercise('htmlBeginner1', {
+    stars,
+    seconds,
+    hints: hintsUsed,
+    mistakes
+  });
+  document.getElementById('earned-xp').firstChild.textContent = `+${result.earnedXp} XP`;
+  document.getElementById('result-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('result-time').textContent = LearnPathGame.formatTime(seconds);
+  document.getElementById('result-hints').textContent = hintsUsed;
+  document.getElementById('result-mistakes').textContent = mistakes;
+  document.getElementById('completion-title').textContent = result.earnedXp ? 'Exercise complete' : 'Personal best updated';
+  document.getElementById('completion-overlay').classList.add('visible');
+  renderXpChip();
+}
+
+function retryExercise() {
+  current = 0;
+  hintsUsed = 0;
+  mistakes = 0;
+  startedAt = Date.now();
+  document.getElementById('completion-overlay').classList.remove('visible');
+  renderAttemptStats();
+  renderLesson(0);
+}
+
+function renderXpChip() {
+  const state = LearnPathGame.load();
+  const level = LearnPathGame.getLevel(state.xp);
+  document.getElementById('xp-chip').textContent = `Level ${level.number} · ${state.xp} XP`;
+}
+
+renderXpChip();
+renderAttemptStats();
+renderLesson(0);
+</script>
+</body>
+</html>

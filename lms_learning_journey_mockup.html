@@ -1,0 +1,361 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearnPath - Learning Journey</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f7f7f8;
+  --color-background-tertiary: #f1f1f3;
+  --color-border-secondary: #c8c8ce;
+  --color-border-tertiary: #e2e2e6;
+  --color-text-primary: #1f1f23;
+  --color-text-secondary: #5f6068;
+  --color-text-tertiary: #85868f;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+body { min-height: 100vh; padding: 24px; background: #f5f5f7; font-family: var(--font-sans); color: var(--color-text-primary); }
+.ti { display: inline-flex; width: 1em; align-items: center; justify-content: center; font-style: normal; line-height: 1; }
+.ti-home::before { content: "\2302"; }
+.ti-map-2::before { content: "\25C7"; }
+.ti-settings::before { content: "\2699"; }
+.ti-arrow-left::before { content: "\2190"; }
+.ti-check::before { content: "\2713"; }
+.ti-lock::before { content: "\2022"; }
+.shell { display: flex; width: min(100%, 1080px); height: min(680px, calc(100vh - 48px)); min-height: 520px; margin: 0 auto; border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); box-shadow: 0 18px 50px rgba(31,31,35,.08); }
+.sidebar { width: 160px; border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; background: var(--color-background-secondary); flex-shrink: 0; }
+.sidebar-logo { padding: 18px 14px 14px; font-size: 14px; font-weight: 650; color: var(--color-text-primary); border-bottom: 1px solid var(--color-border-tertiary); letter-spacing: -.2px; }
+.sidebar-logo span { font-size: 11px; color: var(--color-text-tertiary); display: block; font-weight: 400; margin-top: 2px; }
+.nav-item { padding: 11px 14px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 8px; border-left: 3px solid transparent; transition: background .15s, color .15s; }
+.nav-item:hover { background: var(--color-background-primary); }
+.nav-item.active { color: var(--color-text-primary); font-weight: 500; border-left-color: #7F77DD; background: var(--color-background-primary); }
+.nav-item i { font-size: 15px; }
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { min-height: 66px; padding: 14px 20px; border-bottom: 1px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.topbar h1 { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.breadcrumb { font-size: 12px; color: var(--color-text-tertiary); }
+.player-progress { display: flex; align-items: center; gap: 8px; }
+.player-chip { padding: 5px 9px; border-radius: 999px; background: #EEEDFE; color: #534AB7; font-size: 11px; font-weight: 650; white-space: nowrap; }
+.streak-chip { padding: 5px 9px; border-radius: 999px; background: #FAEEDA; color: #633806; font-size: 11px; font-weight: 650; white-space: nowrap; }
+.content { flex: 1; overflow-y: auto; padding: 24px; background: #fbfbfc; }
+
+/* Roadmap view */
+.roadmap { display: none; }
+.roadmap.visible { display: block; }
+.roadmap-grid { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.topic-card { background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; width: 148px; min-height: 142px; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; position: relative; }
+.topic-card:hover { border-color: var(--color-border-secondary); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(31,31,35,.07); }
+.topic-card.active-topic { border-color: #7F77DD; border-width: 1.5px; }
+.topic-card .topic-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 8px; }
+.topic-card h3 { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+.topic-card p { font-size: 11px; color: var(--color-text-secondary); line-height: 1.5; }
+.connector { display: flex; align-items: center; color: var(--color-text-tertiary); font-size: 16px; }
+.badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 500; margin-top: 6px; }
+.badge.done { background: #EAF3DE; color: #3B6D11; }
+.badge.next { background: #EEEDFE; color: #534AB7; }
+.badge.locked { background: var(--color-background-secondary); color: var(--color-text-tertiary); }
+
+/* Topic view */
+.topic-view { display: none; }
+.topic-view.visible { display: block; }
+.topic-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.topic-header .back-btn { font-size: 12px; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 6px 10px; border: 1px solid var(--color-border-tertiary); border-radius: 7px; transition: background .15s, border-color .15s; }
+.topic-header .back-btn:hover { background: var(--color-background-secondary); }
+.topic-header h2 { font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
+.exercises { display: flex; flex-direction: column; gap: 10px; }
+.ex-row { display: flex; align-items: center; gap: 10px; }
+.ex-card { flex: 1; background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s; display: flex; align-items: center; gap: 12px; }
+.ex-card:hover { border-color: var(--color-border-secondary); background: var(--color-background-secondary); }
+.ex-card.active-ex { border-color: #7F77DD; border-width: 1.5px; }
+.ex-card.locked-ex { opacity: .5; cursor: default; }
+.ex-card .ex-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+.ex-card .ex-info h4 { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.ex-card .ex-info p { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.arrow-conn { color: var(--color-text-tertiary); font-size: 14px; flex-shrink: 0; }
+.ex-stack { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.progress-bar { height: 3px; background: var(--color-background-secondary); border-radius: 2px; margin-top: 16px; }
+.progress-fill { height: 100%; border-radius: 2px; background: #7F77DD; transition: width .4s; }
+.progress-label { font-size: 11px; color: var(--color-text-tertiary); margin-top: 5px; }
+.view { display: none; }
+.view.visible { display: block; }
+.view-intro { max-width: 620px; margin-bottom: 18px; font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); }
+.level-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.level-card { min-height: 210px; padding: 18px; border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); background: var(--color-background-primary); display: flex; flex-direction: column; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.level-card.available { cursor: pointer; border-color: #AFA9EC; }
+.level-card.available:hover { transform: translateY(-2px); border-color: #7F77DD; box-shadow: 0 10px 24px rgba(83,74,183,.1); }
+.level-card.locked { opacity: .62; }
+.level-icon { width: 38px; height: 38px; margin-bottom: 14px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
+.level-card h3 { margin-bottom: 5px; font-size: 14px; font-weight: 650; }
+.level-card p { font-size: 12px; line-height: 1.55; color: var(--color-text-secondary); }
+.level-meta { margin-top: auto; padding-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--color-text-tertiary); }
+.level-action { color: #534AB7; font-weight: 650; }
+.exercise-list { display: grid; gap: 10px; }
+.exercise-list .ex-card { width: 100%; }
+.exercise-status { margin-left: auto; font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; }
+.exercise-status.start { color: #534AB7; font-weight: 650; }
+.exercise-rating { margin-left: auto; color: #E59B18; font-size: 13px; letter-spacing: 1px; white-space: nowrap; }
+.level-stars { color: #E59B18; letter-spacing: 1px; }
+.completed-card { border-color: #97C459; background: #fbfff7; }
+
+@media (max-width: 720px) {
+  body { padding: 0; background: var(--color-background-primary); }
+  .shell { width: 100%; height: 100vh; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .sidebar { width: 68px; }
+  .sidebar-logo { padding: 16px 8px; text-align: center; font-size: 12px; }
+  .sidebar-logo span, .nav-item:not(.active) { font-size: 0; }
+  .nav-item { justify-content: center; padding: 13px 8px; border-left-width: 3px; }
+  .nav-item i { font-size: 18px; }
+  .content { padding: 18px; }
+  .roadmap-grid { display: grid; grid-template-columns: 1fr; }
+  .topic-card { width: 100%; min-height: 0; }
+  .connector { justify-content: center; transform: rotate(90deg); }
+  .ex-row { align-items: stretch; flex-direction: column; }
+  .arrow-conn { align-self: center; transform: rotate(90deg); }
+  .level-grid { grid-template-columns: 1fr; }
+  .level-card { min-height: 170px; }
+  .exercise-status { display: none; }
+  .player-progress { align-items: flex-end; flex-direction: column; gap: 4px; }
+  .player-chip, .streak-chip { padding: 3px 7px; font-size: 9px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="sidebar-logo">LearnPath <span>Web Dev Track</span></div>
+    <div class="nav-item active" onclick="showRoadmap()"><i class="ti ti-map-2" aria-hidden="true"></i> Learning journey</div>
+    <div class="nav-item" onclick="goTo('lms_home_page_mockup.html')"><i class="ti ti-home" aria-hidden="true"></i> Home</div>
+    <div class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="breadcrumb" id="breadcrumb">Web Dev Track</div>
+        <h1 id="topbar-title">Learning journey</h1>
+      </div>
+      <div class="player-progress">
+        <span class="streak-chip" id="journey-streak">↑ 5 day streak</span>
+        <span class="player-chip" id="journey-level">Level 2 · 340 XP</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Roadmap view -->
+      <div class="roadmap view visible" id="roadmap-view">
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;">Follow the path — each topic unlocks the next.</p>
+        <div class="roadmap-grid" id="roadmap-grid">
+
+          <div class="topic-card active-topic" onclick="showTopic('html')">
+            <div class="topic-icon" style="background:#FAECE7">🌐</div>
+            <h3>HTML</h3>
+            <p>Structure of the web</p>
+            <span class="badge next">In progress</span>
+          </div>
+
+          <div class="connector">→</div>
+
+          <div class="topic-card" aria-disabled="true">
+            <div class="topic-icon" style="background:#E6F1FB">🎨</div>
+            <h3>CSS</h3>
+            <p>Styles & layout</p>
+            <span class="badge locked">Locked</span>
+          </div>
+
+          <div class="connector">↓</div>
+
+          <div class="topic-card" onclick="">
+            <div class="topic-icon" style="background:#EEEDFE">⚡</div>
+            <h3>JS</h3>
+            <p>Logic & interaction</p>
+            <span class="badge locked">Locked</span>
+          </div>
+
+          <div class="connector">→</div>
+
+          <div class="topic-card" onclick="">
+            <div class="topic-icon" style="background:#EAF3DE">⚛️</div>
+            <h3>React</h3>
+            <p>Component UI</p>
+            <span class="badge locked">Locked</span>
+          </div>
+
+        </div>
+
+        <div style="margin-top:20px;border-top:0.5px solid var(--color-border-tertiary);padding-top:14px;">
+          <p style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:6px;">Also unlocks after JS</p>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="topic-card" style="width:120px;cursor:default;opacity:.5">
+              <div class="topic-icon" style="background:#EAF3DE">🖥️</div>
+              <h3>Node</h3>
+              <p>Server-side JS</p>
+              <span class="badge locked">Locked</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Level selection -->
+      <div class="topic-view view" id="levels-view">
+        <div class="topic-header">
+          <div class="back-btn" onclick="showRoadmap()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</div>
+          <h2>Choose your HTML level</h2>
+        </div>
+
+        <p class="view-intro">Build your HTML skills in stages. Complete each level to unlock the next set of exercises.</p>
+
+        <div class="level-grid">
+          <div class="level-card available" onclick="showBeginnerExercises()" role="button" tabindex="0" onkeydown="activateWithKeyboard(event, showBeginnerExercises)">
+            <div class="level-icon" style="background:#EAF3DE;color:#3B6D11">01</div>
+            <h3>Beginner</h3>
+            <p>Learn tags, attributes, lists, links, images, and the foundations of page structure.</p>
+            <div class="level-meta"><span id="beginner-level-progress">0 of 3 complete</span><span class="level-action" id="beginner-level-rating">View exercises →</span></div>
+          </div>
+          <div class="level-card locked">
+            <div class="level-icon" style="background:#E6F1FB;color:#185FA5">02</div>
+            <h3>Intermediate</h3>
+            <p>Work with forms, tables, semantic layouts, and accessible page structure.</p>
+            <div class="level-meta"><span>4 exercises</span><span><i class="ti ti-lock" aria-hidden="true"></i> Locked</span></div>
+          </div>
+          <div class="level-card locked">
+            <div class="level-icon" style="background:#FAEEDA;color:#854F0B">03</div>
+            <h3>Advanced</h3>
+            <p>Build complex, accessible documents with metadata, media, and advanced semantics.</p>
+            <div class="level-meta"><span>4 exercises</span><span><i class="ti ti-lock" aria-hidden="true"></i> Locked</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Beginner exercise list -->
+      <div class="topic-view view" id="beginner-view">
+        <div class="topic-header">
+          <div class="back-btn" onclick="showTopic('html')"><i class="ti ti-arrow-left" aria-hidden="true"></i> Levels</div>
+          <h2>HTML Beginner</h2>
+        </div>
+
+        <p class="view-intro">Complete these exercises in order to unlock the Intermediate level.</p>
+        <div class="progress-bar"><div class="progress-fill" id="beginner-progress-fill" style="width:0"></div></div>
+        <p class="progress-label" id="beginner-progress-label">0 of 3 exercises complete</p>
+
+        <div class="exercise-list" style="margin-top:16px">
+          <div class="ex-card active-ex" id="exercise-1-card" onclick="goTo('html_exercise1_structure_basics.html')" role="button" tabindex="0" onkeydown="activateLinkWithKeyboard(event, 'html_exercise1_structure_basics.html')">
+            <div class="ex-num" id="exercise-1-icon" style="background:#EEEDFE;color:#534AB7">1</div>
+            <div class="ex-info">
+              <h4>Exercise 1</h4>
+              <p>Tags, elements &amp; attributes</p>
+            </div>
+            <span class="exercise-status start" id="exercise-1-status">Start →</span>
+            <span class="exercise-rating" id="exercise-1-rating" hidden>☆☆☆</span>
+          </div>
+          <div class="ex-card locked-ex" id="exercise-2-card" aria-disabled="true">
+            <div class="ex-num" id="exercise-2-icon" style="background:var(--color-background-secondary);color:var(--color-text-tertiary)"><i class="ti ti-lock" style="font-size:13px" aria-hidden="true"></i></div>
+            <div class="ex-info">
+              <h4>Exercise 2</h4>
+              <p>Lists, links &amp; images</p>
+            </div>
+            <span class="exercise-status" id="exercise-2-status">Locked</span>
+          </div>
+          <div class="ex-card locked-ex" aria-disabled="true">
+            <div class="ex-num" style="background:var(--color-background-secondary);color:var(--color-text-tertiary)"><i class="ti ti-lock" style="font-size:13px" aria-hidden="true"></i></div>
+            <div class="ex-info">
+              <h4>Exercise 3</h4>
+              <p>Basic page structure</p>
+            </div>
+            <span class="exercise-status">Locked</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="gamification.js"></script>
+<script>
+function starText(value) {
+  return '★'.repeat(value) + '☆'.repeat(3 - value);
+}
+
+function renderProgress() {
+  const state = LearnPathGame.load();
+  const level = LearnPathGame.getLevel(state.xp);
+  const completed = Boolean(state.completedExercises.htmlBeginner1?.completed);
+  const rating = state.ratings.htmlBeginner1 || 0;
+  const completedCount = completed ? 1 : 0;
+
+  document.getElementById('journey-level').textContent = `Level ${level.number} · ${state.xp} XP`;
+  document.getElementById('journey-streak').textContent = `↑ ${state.streak} day streak`;
+  document.getElementById('beginner-progress-fill').style.width = `${Math.round((completedCount / 3) * 100)}%`;
+  document.getElementById('beginner-progress-label').textContent = `${completedCount} of 3 exercises complete`;
+  document.getElementById('beginner-level-progress').textContent = `${completedCount} of 3 complete`;
+
+  if (completed) {
+    const card = document.getElementById('exercise-1-card');
+    card.classList.remove('active-ex');
+    card.classList.add('completed-card');
+    document.getElementById('exercise-1-icon').innerHTML = '<i class="ti ti-check" aria-hidden="true"></i>';
+    document.getElementById('exercise-1-icon').style.background = '#EAF3DE';
+    document.getElementById('exercise-1-icon').style.color = '#3B6D11';
+    document.getElementById('exercise-1-status').textContent = 'Replay';
+    const ratingElement = document.getElementById('exercise-1-rating');
+    ratingElement.hidden = false;
+    ratingElement.textContent = starText(rating);
+    document.getElementById('beginner-level-rating').innerHTML = `<span class="level-stars">${starText(rating)}</span>`;
+
+    const nextCard = document.getElementById('exercise-2-card');
+    nextCard.classList.remove('locked-ex');
+    document.getElementById('exercise-2-icon').textContent = '2';
+    document.getElementById('exercise-2-icon').style.background = '#EEEDFE';
+    document.getElementById('exercise-2-icon').style.color = '#534AB7';
+    document.getElementById('exercise-2-status').textContent = 'Coming soon';
+  }
+}
+
+function showRoadmap() {
+  showView('roadmap-view');
+  document.getElementById('topbar-title').textContent = 'Learning journey';
+  document.getElementById('breadcrumb').textContent = 'Web Dev Track';
+  history.replaceState(null, '', window.location.pathname);
+  document.querySelectorAll('.nav-item').forEach((el,i) => el.classList.toggle('active', i===0));
+}
+function showTopic(id) {
+  if (id !== 'html') return;
+  showView('levels-view');
+  document.getElementById('topbar-title').textContent = 'HTML';
+  document.getElementById('breadcrumb').textContent = 'Web Dev Track → HTML';
+  history.replaceState(null, '', '#html');
+}
+function showBeginnerExercises() {
+  showView('beginner-view');
+  document.getElementById('topbar-title').textContent = 'HTML Beginner';
+  document.getElementById('breadcrumb').textContent = 'Web Dev Track → HTML → Beginner';
+  history.replaceState(null, '', '#html-beginner');
+}
+function showView(id) {
+  document.querySelectorAll('.view').forEach((view) => view.classList.toggle('visible', view.id === id));
+}
+function goTo(path) {
+  window.location.href = path;
+}
+function activateWithKeyboard(event, action) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    action();
+  }
+}
+function activateLinkWithKeyboard(event, path) {
+  activateWithKeyboard(event, () => goTo(path));
+}
+if (window.location.hash === '#html-beginner') showBeginnerExercises();
+else if (window.location.hash === '#html') showTopic('html');
+renderProgress();
+window.addEventListener('learnpath:progress', renderProgress);
+</script>
+</body>
+</html>
