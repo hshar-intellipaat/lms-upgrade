@@ -6,6 +6,7 @@
   const defaults = {
     xp: 340,
     weeklyXp: 180,
+    semesterXp: 340,
     streak: 5,
     bestStreak: 8,
     lastActive: null,
@@ -28,7 +29,9 @@
       }
     } catch (error) {}
     const newest = candidates.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0] || {};
-    return { ...defaults, ...newest };
+    const state = { ...defaults, ...newest };
+    if (!Number.isFinite(newest.semesterXp)) state.semesterXp = state.xp;
+    return state;
   }
 
   function save(state) {
@@ -88,6 +91,60 @@
     return players.map((player, index) => ({ ...player, rank: index + 1 }));
   }
 
+  function getSemesterLeaderboard(state) {
+    const classmates = [
+      ["Aarav Mehta", 780, "CSE-A"],
+      ["Maya Iyer", 735, "CSE-A"],
+      ["Ishaan Gupta", 690, "CSE-B"],
+      ["Ananya Rao", 655, "CSE-A"],
+      ["Vivaan Shah", 620, "CSE-B"],
+      ["Diya Nair", 590, "CSE-A"],
+      ["Arjun Verma", 560, "CSE-B"],
+      ["Sofia Khan", 525, "CSE-A"],
+      ["Kabir Singh", 490, "CSE-B"],
+      ["Meera Joshi", 455, "CSE-A"],
+      ["Rohan Das", 425, "CSE-B"],
+      ["Aisha Patel", 395, "CSE-A"],
+      ["Neel Kapoor", 365, "CSE-B"],
+      ["Tara Menon", 325, "CSE-A"],
+      ["Aditya Bose", 295, "CSE-B"],
+      ["Kiara Jain", 270, "CSE-A"],
+      ["Reyansh Roy", 245, "CSE-B"],
+      ["Sara Thomas", 220, "CSE-A"],
+      ["Dev Malhotra", 195, "CSE-B"],
+      ["Ira Kulkarni", 170, "CSE-A"],
+      ["Yash Sethi", 150, "CSE-B"],
+      ["Naina Bhat", 130, "CSE-A"],
+      ["Om Prakash", 115, "CSE-B"],
+      ["Riya Sen", 95, "CSE-A"],
+      ["Manav Gill", 80, "CSE-B"],
+      ["Zoya Ali", 65, "CSE-A"],
+      ["Aryan Pillai", 50, "CSE-B"],
+      ["Myra Dutta", 35, "CSE-A"],
+      ["Veer Saxena", 20, "CSE-B"]
+    ].map(([name, xp, section]) => ({ name, xp, section }));
+
+    const ranked = [
+      ...classmates,
+      { name: "Rahul", xp: state.semesterXp, section: "CSE-A", current: true }
+    ]
+      .sort((a, b) => b.xp - a.xp || a.name.localeCompare(b.name))
+      .map((student, index, all) => ({
+        ...student,
+        rank: index + 1,
+        aheadPercent: Math.round(((all.length - index - 1) / all.length) * 100),
+        topPercent: Math.max(1, Math.ceil(((index + 1) / all.length) * 100))
+      }));
+
+    return {
+      cohortName: "BTech CSE 2026",
+      semesterName: "Semester 1",
+      totalStudents: ranked.length,
+      students: ranked,
+      current: ranked.find((student) => student.current)
+    };
+  }
+
   function completeExercise(id, result) {
     const state = load();
     const previous = state.completedExercises[id];
@@ -97,6 +154,7 @@
     if (!previous) {
       state.xp += earnedXp;
       state.weeklyXp += earnedXp;
+      state.semesterXp += earnedXp;
       recordActivity(state);
     }
 
@@ -130,6 +188,7 @@
     if (!state.comebackAvailable || state.comebackClaimed) return { state, earnedXp: 0 };
     state.xp += 50;
     state.weeklyXp += 50;
+    state.semesterXp += 50;
     state.comebackClaimed = true;
     state.comebackAvailable = false;
     save(state);
@@ -148,6 +207,7 @@
     save,
     getLevel,
     getLeague,
+    getSemesterLeaderboard,
     completeExercise,
     claimComebackBonus,
     formatTime

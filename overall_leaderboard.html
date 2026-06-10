@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearnPath - Semester Leaderboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font-sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --color-background-primary:#fff;
+  --color-background-secondary:#f7f7f8;
+  --color-background-tertiary:#f1f1f3;
+  --color-border-secondary:#c8c8ce;
+  --color-border-tertiary:#e2e2e6;
+  --color-text-primary:#1f1f23;
+  --color-text-secondary:#5f6068;
+  --color-text-tertiary:#85868f;
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+body{min-height:100vh;padding:24px;background:#f5f5f7;font-family:var(--font-sans);color:var(--color-text-primary)}
+.ti{display:inline-flex;width:1em;align-items:center;justify-content:center;font-style:normal;line-height:1}
+.ti-home::before{content:"\2302"}
+.ti-map-2::before{content:"\25C7"}
+.ti-trophy::before{content:"\2605"}
+.ti-settings::before{content:"\2699"}
+.shell{display:flex;width:min(100%,1080px);height:min(780px,calc(100vh - 48px));min-height:620px;margin:0 auto;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary);box-shadow:0 18px 50px rgba(31,31,35,.08)}
+.sidebar{width:178px;border-right:1px solid var(--color-border-tertiary);display:flex;flex-direction:column;background:var(--color-background-secondary);flex-shrink:0}
+.sidebar-logo{padding:18px 14px 14px;border-bottom:1px solid var(--color-border-tertiary)}
+.sidebar-logo p{font-size:14px;font-weight:650}
+.sidebar-logo span{display:block;margin-top:2px;font-size:11px;color:var(--color-text-tertiary)}
+.nav-item{padding:11px 14px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;display:flex;align-items:center;gap:8px;border-left:3px solid transparent;transition:.15s;white-space:nowrap}
+.nav-item:hover{background:var(--color-background-primary)}
+.nav-item.active{color:var(--color-text-primary);font-weight:600;border-left-color:#7F77DD;background:var(--color-background-primary)}
+.nav-item i{font-size:15px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:#fbfbfc}
+.topbar{min-height:66px;padding:14px 20px;background:#fff;border-bottom:1px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:15px;font-weight:600}
+.topbar p{margin-top:2px;font-size:11px;color:var(--color-text-tertiary)}
+.avatar{width:30px;height:30px;border-radius:50%;background:#EEEDFE;color:#534AB7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:650}
+.content{flex:1;overflow-y:auto;padding:20px}
+.standing-hero{padding:20px;border:1px solid #dedaf7;border-radius:var(--border-radius-lg);background:linear-gradient(135deg,#fff,#f4f2ff);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px}
+.rank-orb{width:74px;height:74px;border-radius:20px;background:#7F77DD;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(83,74,183,.2)}
+.rank-orb strong{font-size:27px;line-height:1}
+.rank-orb span{margin-top:4px;font-size:9px;text-transform:uppercase;letter-spacing:.08em}
+.standing-copy h2{font-size:17px;margin-bottom:5px}
+.standing-copy p{font-size:12px;line-height:1.55;color:var(--color-text-secondary)}
+.standing-copy strong{color:#534AB7}
+.standing-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;min-width:290px}
+.standing-stat{padding:10px;border:1px solid var(--color-border-tertiary);border-radius:8px;background:rgba(255,255,255,.78)}
+.standing-stat span{display:block;margin-bottom:4px;font-size:9px;text-transform:uppercase;color:var(--color-text-tertiary)}
+.standing-stat strong{font-size:14px}
+.section-header{margin:18px 0 9px;display:flex;align-items:end;justify-content:space-between;gap:12px}
+.section-header h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-tertiary)}
+.section-header p{font-size:11px;color:var(--color-text-tertiary)}
+.podium{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.podium-card{padding:14px;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);background:#fff;display:flex;align-items:center;gap:10px}
+.podium-card.first{border-color:#e2bc62;background:#fffaf0}
+.medal{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:750}
+.medal.gold{background:#FAEEDA;color:#854F0B}
+.medal.silver{background:#ececf0;color:#52525a}
+.medal.bronze{background:#FAECE7;color:#993C1D}
+.podium-card h4{font-size:12px}
+.podium-card p{margin-top:2px;font-size:10px;color:var(--color-text-tertiary)}
+.leaderboard-card{border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);background:#fff;overflow:hidden}
+.leaderboard-head,.leaderboard-row{display:grid;grid-template-columns:54px minmax(180px,1fr) 90px 80px;align-items:center;gap:10px}
+.leaderboard-head{padding:9px 14px;background:var(--color-background-secondary);border-bottom:1px solid var(--color-border-tertiary);font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-tertiary)}
+.leaderboard-row{padding:10px 14px;border-bottom:1px solid #efeff1;font-size:12px}
+.leaderboard-row:last-child{border-bottom:0}
+.leaderboard-row.current{background:#EEEDFE;color:#3C3489;font-weight:650;box-shadow:inset 3px 0 #7F77DD}
+.student{display:flex;align-items:center;gap:9px;min-width:0}
+.student-avatar{width:28px;height:28px;border-radius:50%;background:var(--color-background-tertiary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:650;color:var(--color-text-secondary);flex-shrink:0}
+.student-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.student-name small{display:block;margin-top:1px;font-size:9px;font-weight:400;color:var(--color-text-tertiary)}
+.rank{color:var(--color-text-tertiary);font-weight:650}
+.xp{text-align:right;font-weight:650}
+.percentile{text-align:right;color:var(--color-text-tertiary);font-size:11px}
+.current .rank,.current .percentile{color:#534AB7}
+.nearby-note{padding:9px 14px;background:#fafafa;border-bottom:1px solid var(--color-border-tertiary);font-size:10px;color:var(--color-text-tertiary)}
+@media(max-width:760px){
+  body{padding:0;background:#fff}
+  .shell{width:100%;height:100vh;min-height:0;border:0;border-radius:0;box-shadow:none}
+  .sidebar{width:68px}
+  .sidebar-logo{padding:16px 8px;text-align:center}
+  .sidebar-logo p{font-size:12px}
+  .sidebar-logo span{font-size:0}
+  .nav-item{justify-content:center;padding:13px 8px;font-size:0}
+  .nav-item i{font-size:18px}
+  .content{padding:16px}
+  .standing-hero{grid-template-columns:auto 1fr}
+  .standing-stats{grid-column:1/-1;min-width:0}
+  .podium{grid-template-columns:1fr}
+  .leaderboard-head,.leaderboard-row{grid-template-columns:42px minmax(130px,1fr) 70px}
+  .percentile{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo"><p>LearnPath</p><span>Web Dev Track</span></div>
+    <div class="nav-item" onclick="window.location.href='index.html'"><i class="ti ti-home" aria-hidden="true"></i> Home</div>
+    <div class="nav-item" onclick="window.location.href='lms_learning_journey_mockup.html'"><i class="ti ti-map-2" aria-hidden="true"></i> Learning journey</div>
+    <div class="nav-item active"><i class="ti ti-trophy" aria-hidden="true"></i> Semester leaderboard</div>
+    <div class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+  </div>
+
+  <div class="main" role="main">
+    <div class="topbar">
+      <div><h1>Semester leaderboard</h1><p id="cohort-label">BTech CSE 2026 · Semester 1 standing</p></div>
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--color-text-tertiary)">Rahul</span><div class="avatar">RK</div></div>
+    </div>
+
+    <div class="content">
+      <div class="standing-hero" aria-labelledby="standing-title">
+        <div class="rank-orb"><strong id="my-rank">#--</strong><span>Batch rank</span></div>
+        <div class="standing-copy">
+          <h2 id="standing-title">Your batch standing this semester</h2>
+          <p id="standing-message">Loading your position...</p>
+        </div>
+        <div class="standing-stats">
+          <div class="standing-stat"><span>Semester XP</span><strong id="my-xp">--</strong></div>
+          <div class="standing-stat"><span>Batch percentile</span><strong id="my-percentile">--</strong></div>
+          <div class="standing-stat"><span>Next rank</span><strong id="xp-gap">--</strong></div>
+        </div>
+      </div>
+
+      <div class="section-header"><h3>Semester leaders</h3><p>Rankings reset when the next semester begins</p></div>
+      <div class="podium" id="podium" aria-label="Top three students"></div>
+
+      <div class="section-header"><h3>Full batch ranking</h3><p>Your current position is highlighted</p></div>
+      <div class="leaderboard-card" aria-label="Semester batch leaderboard">
+        <div class="leaderboard-head"><span>Rank</span><span>Student</span><span style="text-align:right">XP</span><span style="text-align:right">Standing</span></div>
+        <div class="nearby-note" id="nearby-note"></div>
+        <div id="leaderboard-rows"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="gamification.js"></script>
+<script>
+function initials(name) {
+  return name.split(' ').map((part) => part[0]).slice(0, 2).join('');
+}
+
+function renderLeaderboard() {
+  const state = LearnPathGame.load();
+  const board = LearnPathGame.getSemesterLeaderboard(state);
+  const me = board.current;
+  const previous = board.students[me.rank - 2];
+  const gap = previous ? Math.max(0, previous.xp - me.xp + 1) : 0;
+  const positionText = me.rank <= 3
+    ? `You are in the top three of your batch. Keep building consistent, high-quality progress.`
+    : `You are ahead of <strong>${me.aheadPercent}%</strong> of the batch and ${gap} XP away from rank #${me.rank - 1}.`;
+
+  document.getElementById('cohort-label').textContent = `${board.cohortName} · ${board.semesterName} · ${board.totalStudents} students`;
+  document.getElementById('my-rank').textContent = `#${me.rank}`;
+  document.getElementById('standing-message').innerHTML = positionText;
+  document.getElementById('my-xp').textContent = me.xp;
+  document.getElementById('my-percentile').textContent = `Top ${me.topPercent}%`;
+  document.getElementById('xp-gap').textContent = previous ? `${gap} XP` : 'You lead';
+
+  const medalClasses = ['gold', 'silver', 'bronze'];
+  document.getElementById('podium').innerHTML = board.students.slice(0, 3).map((student, index) => `
+    <article class="podium-card${index === 0 ? ' first' : ''}">
+      <div class="medal ${medalClasses[index]}">#${student.rank}</div>
+      <div><h4>${student.name}${student.current ? ' (You)' : ''}</h4><p>${student.section} · ${student.xp} XP</p></div>
+    </article>`).join('');
+
+  document.getElementById('nearby-note').textContent = `Showing all ${board.totalStudents} students for ${board.semesterName}. Rankings reset next semester.`;
+  document.getElementById('leaderboard-rows').innerHTML = board.students.map((student) => `
+    <div class="leaderboard-row${student.current ? ' current' : ''}">
+      <span class="rank">#${student.rank}</span>
+      <div class="student">
+        <div class="student-avatar">${initials(student.name)}</div>
+        <div class="student-name">${student.name}${student.current ? ' (You)' : ''}<small>${student.section}</small></div>
+      </div>
+      <span class="xp">${student.xp} XP</span>
+      <span class="percentile">Top ${student.topPercent}%</span>
+    </div>`).join('');
+}
+
+renderLeaderboard();
+window.addEventListener('learnpath:progress', renderLeaderboard);
+</script>
+</body>
+</html>
