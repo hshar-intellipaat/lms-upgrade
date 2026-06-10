@@ -102,6 +102,16 @@ textarea{flex:1;width:100%;border:none;outline:none;resize:none;font-family:var(
 .completion-actions{display:flex;gap:8px}
 .completion-actions button{flex:1;padding:9px}
 .completion-actions .primary{background:#7F77DD;border-color:#7F77DD;color:#fff}
+.level-up-overlay{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(31,31,35,.6);backdrop-filter:blur(7px)}
+.level-up-overlay.visible{display:flex}
+.level-up-card{width:min(100%,430px);padding:30px;border-radius:20px;background:linear-gradient(145deg,#fff,#f0edff);border:1px solid #c8c1f3;box-shadow:0 30px 90px rgba(44,37,105,.38);text-align:center}
+.level-up-burst{width:82px;height:82px;margin:0 auto 15px;border-radius:25px;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;box-shadow:0 13px 30px rgba(83,74,183,.32)}
+.level-up-card .eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:#7F77DD;font-weight:750}
+.level-up-card h2{margin-top:7px;font-size:25px}
+.level-up-card p{margin:8px auto 18px;max-width:330px;font-size:13px;line-height:1.55;color:var(--color-text-secondary)}
+.level-up-path{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;font-size:11px;color:var(--color-text-tertiary)}
+.level-up-path strong{padding:5px 9px;border-radius:999px;background:#EEEDFE;color:#534AB7}
+.level-up-card button{width:100%;padding:10px;background:#7F77DD;border-color:#7F77DD;color:#fff}
 .shake{animation:shake .25s linear}
 @keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 
@@ -190,6 +200,17 @@ textarea{flex:1;width:100%;border:none;outline:none;resize:none;font-family:var(
   </div>
 </div>
 
+<div class="level-up-overlay" id="level-up-overlay" role="dialog" aria-modal="true" aria-labelledby="level-up-title">
+  <div class="level-up-card">
+    <div class="level-up-burst" id="level-up-number">3</div>
+    <div class="eyebrow">Level up</div>
+    <h2 id="level-up-title">Code Captain unlocked</h2>
+    <p>Your new player title is now active across LearnPath.</p>
+    <div class="level-up-path"><span id="previous-level-title">Builder</span><span>→</span><strong id="new-level-title">Code Captain</strong></div>
+    <button id="level-up-continue" onclick="continueAfterLevelUp()">Continue</button>
+  </div>
+</div>
+
 <script src="gamification.js"></script>
 <script>
 const steps = [
@@ -241,6 +262,7 @@ let current = 0;
 let hintsUsed = 0;
 let mistakes = 0;
 let startedAt = Date.now();
+let completionWaiting = false;
 
 function hintClick(tag) {
   const ed = document.getElementById('editor');
@@ -337,8 +359,9 @@ function completeExercise() {
   document.getElementById('result-hints').textContent = hintsUsed;
   document.getElementById('result-mistakes').textContent = mistakes;
   document.getElementById('completion-title').textContent = result.earnedXp ? 'Exercise complete' : 'Personal best updated';
-  document.getElementById('completion-overlay').classList.add('visible');
   renderXpChip();
+  completionWaiting = true;
+  if (!showNextLevelUp()) showCompletion();
 }
 
 function retryExercise() {
@@ -353,13 +376,40 @@ function retryExercise() {
 
 function renderXpChip() {
   const state = LearnPathGame.load();
-  const level = LearnPathGame.getLevel(state.xp);
-  document.getElementById('xp-chip').textContent = `Level ${level.number} · ${state.xp} XP`;
+  const status = LearnPathGame.getPlayerStatus(state);
+  document.getElementById('xp-chip').textContent = `${status.level.title} · L${status.level.number} · #${status.semesterRank}`;
+}
+
+function showCompletion() {
+  completionWaiting = false;
+  document.getElementById('completion-overlay').classList.add('visible');
+}
+
+function showNextLevelUp() {
+  const event = LearnPathGame.consumeCelebration();
+  if (!event || event.type !== 'level_up') return false;
+  document.getElementById('level-up-number').textContent = event.level;
+  document.getElementById('level-up-title').textContent = `${event.title} unlocked`;
+  document.getElementById('previous-level-title').textContent = event.previousTitle;
+  document.getElementById('new-level-title').textContent = event.title;
+  document.getElementById('level-up-overlay').classList.add('visible');
+  setTimeout(() => document.getElementById('level-up-continue').focus(), 0);
+  return true;
+}
+
+function continueAfterLevelUp() {
+  document.getElementById('level-up-overlay').classList.remove('visible');
+  if (completionWaiting) showCompletion();
+  else showNextLevelUp();
 }
 
 renderXpChip();
 renderAttemptStats();
 renderLesson(0);
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && document.getElementById('level-up-overlay').classList.contains('visible')) continueAfterLevelUp();
+});
+showNextLevelUp();
 </script>
 </body>
 </html>

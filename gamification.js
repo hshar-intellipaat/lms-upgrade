@@ -2,6 +2,14 @@
   const STORAGE_KEY = "learnpathGamificationV1";
   const WINDOW_STATE_PREFIX = "LEARNPATH_STATE:";
   const XP_PER_LEVEL = 250;
+  const LEVEL_TITLES = [
+    "Explorer",
+    "Builder",
+    "Code Captain",
+    "Boss Coder",
+    "Code Architect",
+    "Tech Legend"
+  ];
 
   const defaults = {
     xp: 340,
@@ -15,6 +23,7 @@
     completedExercises: {},
     ratings: {},
     personalBests: {},
+    celebrationQueue: [],
     updatedAt: 0
   };
 
@@ -73,10 +82,45 @@
     const levelXp = xp % XP_PER_LEVEL;
     return {
       number,
-      title: ["Explorer", "Builder", "Creator", "Specialist", "Master"][Math.min(number - 1, 4)],
+      title: LEVEL_TITLES[Math.min(number - 1, LEVEL_TITLES.length - 1)],
       currentXp: levelXp,
       requiredXp: XP_PER_LEVEL,
       progress: Math.round((levelXp / XP_PER_LEVEL) * 100)
+    };
+  }
+
+  function queueLevelUp(state, previousLevel, nextLevel) {
+    if (nextLevel.number <= previousLevel.number) return;
+    state.celebrationQueue = Array.isArray(state.celebrationQueue) ? state.celebrationQueue : [];
+    state.celebrationQueue.push({
+      id: `level-up-${Date.now()}-${nextLevel.number}`,
+      type: "level_up",
+      previousLevel: previousLevel.number,
+      previousTitle: previousLevel.title,
+      level: nextLevel.number,
+      title: nextLevel.title,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  function consumeCelebration() {
+    const state = load();
+    const event = state.celebrationQueue?.shift() || null;
+    if (event) save(state);
+    return event;
+  }
+
+  function getPlayerStatus(state = load()) {
+    const level = getLevel(state.xp);
+    const semester = getSemesterLeaderboard(state);
+    return {
+      level,
+      totalXp: state.xp,
+      semesterXp: state.semesterXp,
+      semesterRank: semester.current.rank,
+      semesterStudents: semester.totalStudents,
+      streak: state.streak,
+      xpToNextLevel: level.requiredXp - level.currentXp
     };
   }
 
@@ -147,6 +191,7 @@
 
   function completeExercise(id, result) {
     const state = load();
+    const previousLevel = getLevel(state.xp);
     const previous = state.completedExercises[id];
     const stars = Math.max(1, Math.min(3, result.stars));
     const earnedXp = previous ? 0 : 100 + stars * 25;
@@ -179,20 +224,38 @@
       stars: Math.max(best.stars || 0, stars)
     };
 
+    const level = getLevel(state.xp);
+    queueLevelUp(state, previousLevel, level);
     save(state);
-    return { state, earnedXp, stars, level: getLevel(state.xp) };
+    return {
+      state,
+      earnedXp,
+      stars,
+      level,
+      previousLevel,
+      leveledUp: level.number > previousLevel.number
+    };
   }
 
   function claimComebackBonus() {
     const state = load();
     if (!state.comebackAvailable || state.comebackClaimed) return { state, earnedXp: 0 };
+    const previousLevel = getLevel(state.xp);
     state.xp += 50;
     state.weeklyXp += 50;
     state.semesterXp += 50;
     state.comebackClaimed = true;
     state.comebackAvailable = false;
+    const level = getLevel(state.xp);
+    queueLevelUp(state, previousLevel, level);
     save(state);
-    return { state, earnedXp: 50 };
+    return {
+      state,
+      earnedXp: 50,
+      level,
+      previousLevel,
+      leveledUp: level.number > previousLevel.number
+    };
   }
 
   function formatTime(seconds) {
@@ -206,10 +269,12 @@
     load,
     save,
     getLevel,
+    getPlayerStatus,
     getLeague,
     getSemesterLeaderboard,
     completeExercise,
     claimComebackBonus,
+    consumeCelebration,
     formatTime
   };
 })();

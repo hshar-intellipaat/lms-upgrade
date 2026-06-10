@@ -84,11 +84,33 @@ level_progress_xp = total_xp mod 250
 |---|---|
 | 1 | Explorer |
 | 2 | Builder |
-| 3 | Creator |
-| 4 | Specialist |
-| 5+ | Master |
+| 3 | Code Captain |
+| 4 | Boss Coder |
+| 5 | Code Architect |
+| 6+ | Tech Legend |
 
 Production recommendation: store level thresholds and titles in configuration rather than hard-coding them.
+
+Level titles are display rewards, not academic credentials. Product administrators should be able to rename future titles without changing historical XP or level numbers.
+
+### Level-up celebration queue
+
+Whenever an XP award crosses one or more level thresholds:
+
+1. Calculate the previous and new level from server-authoritative lifetime XP.
+2. Persist a level-up reward event.
+3. Return `leveledUp`, previous level/title, and new level/title in the mutation response.
+4. Expose unacknowledged reward events to the client.
+5. Mark each event acknowledged only after the client confirms it was presented.
+
+The event must appear once across devices and page changes. A refresh, retry, or duplicate XP request must not create a duplicate celebration.
+
+If one large XP award crosses multiple levels, product can either:
+
+- Queue one event per crossed level, or
+- Queue one summarized event showing the final level.
+
+The choice must be consistent and configurable.
 
 ### Exercise ratings
 
@@ -399,6 +421,19 @@ The learner's total XP is the sum of valid ledger entries. A cached total is acc
 - `last_qualifying_activity_date`
 - `updated_at`
 
+#### `learner_reward_events`
+
+- `id`
+- `user_id`
+- `event_type` (`level_up`, `achievement`, `league_promotion`)
+- `source_type`
+- `source_id`
+- `payload` containing previous/new level and title
+- `created_at`
+- `presented_at` nullable
+- `acknowledged_at` nullable
+- `idempotency_key` unique
+
 #### `streak_events`
 
 - `id`
@@ -604,6 +639,14 @@ Response:
     "previousRank": 11,
     "rankChange": 2
   },
+  "levelUp": {
+    "occurred": true,
+    "previousLevel": 2,
+    "previousTitle": "Builder",
+    "newLevel": 3,
+    "newTitle": "Code Captain",
+    "rewardEventId": "uuid"
+  },
   "personalBestUpdates": {
     "fastestTime": true,
     "fewestHints": true,
@@ -625,6 +668,34 @@ Response:
 `POST /api/v1/me/comeback-offers/{offerId}/claim`
 
 Return the awarded XP and updated level. A repeated request with the same idempotency key must return the original result without awarding XP again.
+
+### Player status
+
+`GET /api/v1/me/player-status`
+
+Return the compact status used across the app:
+
+```json
+{
+  "title": "Code Captain",
+  "level": 3,
+  "totalXp": 515,
+  "levelProgressXp": 15,
+  "xpToNextLevel": 235,
+  "levelProgressPercent": 6,
+  "semesterRank": 9,
+  "semesterStudentCount": 30,
+  "semesterXp": 515,
+  "currentStreak": 6
+}
+```
+
+### Reward event queue
+
+- `GET /api/v1/me/reward-events?status=pending`
+- `POST /api/v1/me/reward-events/{eventId}/acknowledge`
+
+Return events in creation order. Acknowledgement must be idempotent.
 
 ### Leaderboards
 
@@ -836,6 +907,9 @@ Publish domain events through an outbox pattern or equivalent:
 - `personal_best.updated`
 - `xp.awarded`
 - `learner.level_changed`
+- `reward_event.created`
+- `reward_event.presented`
+- `reward_event.acknowledged`
 - `streak.incremented`
 - `streak.reset`
 - `comeback_offer.created`
@@ -906,6 +980,9 @@ Important codes:
 - First completion awards XP once
 - Repeated completion improves records without duplicate XP
 - Concurrent completion requests remain idempotent
+- A level-up reward event is created once for a threshold crossing
+- Pending reward events survive refresh and cross-device login
+- Reward acknowledgement cannot remove another learner's event
 - Bonus claim race condition
 - Streak update transaction
 - Exercise version mismatch
@@ -932,6 +1009,8 @@ Important codes:
 ## 15. Production Acceptance Criteria
 
 - XP cannot be duplicated through retries or concurrency.
+- Level-up celebrations are backed by persisted, idempotent reward events.
+- Player status values come from one consistent server response.
 - Client-modified XP or star values are ignored.
 - Streak calculations are correct at timezone and daylight-saving boundaries.
 - Every leaderboard has a documented scoring formula and period.

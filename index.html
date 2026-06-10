@@ -41,6 +41,12 @@ button{font:inherit}
 .nav-item:hover{background:var(--color-background-primary)}
 .nav-item.active{color:var(--color-text-primary);font-weight:500;border-left-color:#7F77DD;background:var(--color-background-primary)}
 .nav-item i{font-size:15px}
+.sidebar-status{margin-top:auto;padding:12px;border-top:1px solid var(--color-border-tertiary);background:#f2f0ff}
+.sidebar-status-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#6f6a96}
+.sidebar-status-title{margin-top:3px;font-size:12px;font-weight:700;color:#3C3489}
+.sidebar-status-meta{display:flex;justify-content:space-between;gap:6px;margin-top:6px;font-size:9px;color:#6f6a96}
+.sidebar-status-bar{height:4px;margin-top:7px;border-radius:999px;background:#dedaf7;overflow:hidden}
+.sidebar-status-fill{height:100%;border-radius:inherit;background:#7F77DD}
 .main{flex:1;min-width:0;overflow-y:auto;background:#fbfbfc}
 .topbar{min-height:66px;padding:14px 20px;background:var(--color-background-primary);border-bottom:1px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2}
 .topbar h1{font-size:15px;font-weight:500;color:var(--color-text-primary)}
@@ -117,6 +123,14 @@ button{font:inherit}
 .rating-stars{color:#E59B18;letter-spacing:1px}
 .toast{position:fixed;right:28px;bottom:28px;padding:11px 14px;border-radius:8px;background:#1f1f23;color:#fff;font-size:12px;box-shadow:0 8px 24px rgba(31,31,35,.2);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s;z-index:5}
 .toast.visible{opacity:1;transform:translateY(0)}
+.level-up-overlay{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(31,31,35,.55);backdrop-filter:blur(6px)}
+.level-up-overlay.visible{display:flex}
+.level-up-card{width:min(100%,420px);padding:30px;border-radius:20px;background:linear-gradient(145deg,#fff,#f1eeff);border:1px solid #cfc9f4;box-shadow:0 30px 90px rgba(44,37,105,.35);text-align:center}
+.level-up-burst{width:78px;height:78px;margin:0 auto 14px;border-radius:24px;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;box-shadow:0 12px 28px rgba(83,74,183,.3)}
+.level-up-card .eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#7F77DD;font-weight:750}
+.level-up-card h2{margin-top:7px;font-size:24px}
+.level-up-card p{margin:7px auto 18px;max-width:320px;font-size:13px;line-height:1.55;color:var(--color-text-secondary)}
+.level-up-card button{width:100%;padding:10px;border:1px solid #7F77DD;border-radius:8px;background:#7F77DD;color:#fff;font-weight:700;cursor:pointer}
 
 @media (max-width:720px){
   body{padding:0;background:var(--color-background-primary)}
@@ -127,6 +141,7 @@ button{font:inherit}
   .sidebar-logo span{font-size:0}
   .nav-item{justify-content:center;padding:13px 8px;font-size:0}
   .nav-item i{font-size:18px}
+  .sidebar-status{display:none}
   .page-body{padding:16px}
   .hero{align-items:flex-start;flex-direction:column}
   .cta-btn{width:100%}
@@ -145,6 +160,12 @@ button{font:inherit}
     <div class="nav-item" onclick="window.location.href='lms_learning_journey_mockup.html'"><i class="ti ti-map-2" aria-hidden="true"></i> Learning journey</div>
     <div class="nav-item" onclick="window.location.href='overall_leaderboard.html'"><i class="ti ti-trophy" aria-hidden="true"></i> Semester leaderboard</div>
     <div class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+    <div class="sidebar-status">
+      <div class="sidebar-status-label">Player status</div>
+      <div class="sidebar-status-title" id="sidebar-level-title">Builder · Level 2</div>
+      <div class="sidebar-status-bar"><div class="sidebar-status-fill" id="sidebar-level-fill" style="width:36%"></div></div>
+      <div class="sidebar-status-meta"><span id="sidebar-rank">#14 this semester</span><span id="sidebar-streak">5 day streak</span></div>
+    </div>
   </div>
 
   <div class="main">
@@ -300,6 +321,15 @@ button{font:inherit}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="level-up-overlay" id="level-up-overlay" role="dialog" aria-modal="true" aria-labelledby="level-up-title">
+  <div class="level-up-card">
+    <div class="level-up-burst" id="level-up-number">3</div>
+    <div class="eyebrow">Level up</div>
+    <h2 id="level-up-title">Code Captain unlocked</h2>
+    <p id="level-up-copy">Your new title is active across LearnPath.</p>
+    <button id="level-up-continue" onclick="closeLevelUp()">Continue</button>
+  </div>
+</div>
 <script src="gamification.js"></script>
 <script>
 function stars(value) {
@@ -315,6 +345,7 @@ function renderGameState() {
   const exerciseRating = state.ratings.htmlBeginner1 || 0;
   const league = LearnPathGame.getLeague(state);
   const me = league.find((player) => player.current);
+  const playerStatus = LearnPathGame.getPlayerStatus(state);
 
   document.getElementById("streak-value").textContent = `${state.streak}-day streak`;
   document.getElementById("exercises-done").textContent = completedCount;
@@ -325,6 +356,10 @@ function renderGameState() {
   document.getElementById("level-progress-label").textContent = `${level.currentXp} / ${level.requiredXp} XP`;
   document.getElementById("level-progress").style.width = `${level.progress}%`;
   document.getElementById("xp-to-next").textContent = `${level.requiredXp - level.currentXp} XP to Level ${level.number + 1}`;
+  document.getElementById("sidebar-level-title").textContent = `${level.title} · Level ${level.number}`;
+  document.getElementById("sidebar-level-fill").style.width = `${level.progress}%`;
+  document.getElementById("sidebar-rank").textContent = `#${playerStatus.semesterRank} this semester`;
+  document.getElementById("sidebar-streak").textContent = `${state.streak} day streak`;
   document.getElementById("league-position").textContent = `#${me.rank}`;
   document.getElementById("league-list").innerHTML = league.map((player) => `
     <div class="league-row${player.current ? " current" : ""}">
@@ -360,6 +395,7 @@ function claimComeback() {
   const result = LearnPathGame.claimComebackBonus();
   renderGameState();
   if (result.earnedXp) showToast(`Comeback bonus claimed: +${result.earnedXp} XP`);
+  showNextCelebration();
 }
 
 function showToast(message) {
@@ -369,8 +405,27 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("visible"), 2400);
 }
 
+function showNextCelebration() {
+  const event = LearnPathGame.consumeCelebration();
+  if (!event || event.type !== "level_up") return;
+  document.getElementById("level-up-number").textContent = event.level;
+  document.getElementById("level-up-title").textContent = `${event.title} unlocked`;
+  document.getElementById("level-up-copy").textContent = `You advanced from ${event.previousTitle} to ${event.title}. Your new title is now active across LearnPath.`;
+  document.getElementById("level-up-overlay").classList.add("visible");
+  setTimeout(() => document.getElementById("level-up-continue").focus(), 0);
+}
+
+function closeLevelUp() {
+  document.getElementById("level-up-overlay").classList.remove("visible");
+  showNextCelebration();
+}
+
 window.addEventListener("learnpath:progress", renderGameState);
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.getElementById("level-up-overlay").classList.contains("visible")) closeLevelUp();
+});
 renderGameState();
+showNextCelebration();
 </script>
 </body>
 </html>

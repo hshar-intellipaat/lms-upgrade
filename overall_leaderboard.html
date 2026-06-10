@@ -34,6 +34,12 @@ body{min-height:100vh;padding:24px;background:#f5f5f7;font-family:var(--font-san
 .nav-item:hover{background:var(--color-background-primary)}
 .nav-item.active{color:var(--color-text-primary);font-weight:600;border-left-color:#7F77DD;background:var(--color-background-primary)}
 .nav-item i{font-size:15px}
+.sidebar-status{margin-top:auto;padding:12px;border-top:1px solid var(--color-border-tertiary);background:#f2f0ff}
+.sidebar-status-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#6f6a96}
+.sidebar-status-title{margin-top:3px;font-size:12px;font-weight:700;color:#3C3489}
+.sidebar-status-meta{display:flex;justify-content:space-between;gap:6px;margin-top:6px;font-size:9px;color:#6f6a96}
+.sidebar-status-bar{height:4px;margin-top:7px;border-radius:999px;background:#dedaf7;overflow:hidden}
+.sidebar-status-fill{height:100%;border-radius:inherit;background:#7F77DD}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:#fbfbfc}
 .topbar{min-height:66px;padding:14px 20px;background:#fff;border-bottom:1px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
 .topbar h1{font-size:15px;font-weight:600}
@@ -87,6 +93,7 @@ body{min-height:100vh;padding:24px;background:#f5f5f7;font-family:var(--font-san
   .sidebar-logo span{font-size:0}
   .nav-item{justify-content:center;padding:13px 8px;font-size:0}
   .nav-item i{font-size:18px}
+  .sidebar-status{display:none}
   .content{padding:16px}
   .standing-hero{grid-template-columns:auto 1fr}
   .standing-stats{grid-column:1/-1;min-width:0}
@@ -104,6 +111,12 @@ body{min-height:100vh;padding:24px;background:#f5f5f7;font-family:var(--font-san
     <div class="nav-item" onclick="window.location.href='lms_learning_journey_mockup.html'"><i class="ti ti-map-2" aria-hidden="true"></i> Learning journey</div>
     <div class="nav-item active"><i class="ti ti-trophy" aria-hidden="true"></i> Semester leaderboard</div>
     <div class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+    <div class="sidebar-status">
+      <div class="sidebar-status-label">Player status</div>
+      <div class="sidebar-status-title" id="sidebar-level-title">Builder · Level 2</div>
+      <div class="sidebar-status-bar"><div class="sidebar-status-fill" id="sidebar-level-fill" style="width:36%"></div></div>
+      <div class="sidebar-status-meta"><span id="sidebar-rank-status">#14 semester</span><span id="sidebar-streak-status">5 day streak</span></div>
+    </div>
   </div>
 
   <div class="main" role="main">
@@ -149,6 +162,7 @@ function renderLeaderboard() {
   const state = LearnPathGame.load();
   const board = LearnPathGame.getSemesterLeaderboard(state);
   const me = board.current;
+  const playerStatus = LearnPathGame.getPlayerStatus(state);
   const previous = board.students[me.rank - 2];
   const gap = previous ? Math.max(0, previous.xp - me.xp + 1) : 0;
   const positionText = me.rank <= 3
@@ -161,6 +175,10 @@ function renderLeaderboard() {
   document.getElementById('my-xp').textContent = me.xp;
   document.getElementById('my-percentile').textContent = `Top ${me.topPercent}%`;
   document.getElementById('xp-gap').textContent = previous ? `${gap} XP` : 'You lead';
+  document.getElementById('sidebar-level-title').textContent = `${playerStatus.level.title} · Level ${playerStatus.level.number}`;
+  document.getElementById('sidebar-level-fill').style.width = `${playerStatus.level.progress}%`;
+  document.getElementById('sidebar-rank-status').textContent = `#${me.rank} semester`;
+  document.getElementById('sidebar-streak-status').textContent = `${state.streak} day streak`;
 
   const medalClasses = ['gold', 'silver', 'bronze'];
   document.getElementById('podium').innerHTML = board.students.slice(0, 3).map((student, index) => `

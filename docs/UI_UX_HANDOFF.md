@@ -268,6 +268,22 @@ Show:
 
 Do not show a progress bar without numerical values.
 
+### Persistent player status
+
+Desktop screens should include a compact game-style player status panel in the left navigation.
+
+Show:
+
+- Current player title
+- Level number
+- Progress to the next level
+- Current semester rank
+- Current streak
+
+The current prototype places this panel at the bottom of the sidebar. On small screens, move it to a compact header/profile surface rather than reducing the text to unreadable sizes.
+
+The status panel is informational, not a second navigation menu. Selecting it may open the Dashboard or Profile in a later iteration.
+
 ### Streak
 
 Show:
@@ -476,10 +492,48 @@ Show:
 - Primary CTA to next exercise
 - Secondary CTA to progress/dashboard
 
+When completion causes a level change, present the level-up celebration before the standard completion summary.
+
 If replaying:
 
 - Explain that completion XP is not awarded twice.
 - Highlight improved personal bests or rating.
+
+### Level-up celebration
+
+The level-up cue should feel game-like but remain short and accessible.
+
+Show:
+
+- `Level up` label
+- New level number
+- Previous title
+- New title
+- Confirmation that the title is active across the app
+- One clear Continue action
+
+Initial configurable title ladder:
+
+| Level | Working title |
+|---|---|
+| 1 | Explorer |
+| 2 | Builder |
+| 3 | Code Captain |
+| 4 | Boss Coder |
+| 5 | Code Architect |
+| 6+ | Tech Legend |
+
+These are working names. Designs must support longer localized titles without breaking.
+
+Behavior:
+
+- Display once per earned level-up event.
+- Queue multiple reward events rather than overlaying them.
+- Do not interrupt active typing or validation.
+- Show after the learner completes the triggering action.
+- Continue to the normal completion result afterward.
+- Respect reduced-motion settings.
+- Do not require animation to understand the reward.
 
 ## 10. Exercise Rating Design
 
@@ -587,6 +641,9 @@ Support:
 | Level up | Dedicated celebration, level title, next target |
 | API pending | Disable duplicate action, show progress |
 | API failed | Preserve result locally, offer retry without implying reward was saved |
+| Level threshold crossed | Queue a level-up celebration, then show the normal result |
+| Multiple rewards pending | Present one at a time in earned order |
+| Reward already acknowledged | Do not show it again |
 
 ### Semester leaderboard
 
@@ -673,6 +730,7 @@ Target WCAG 2.2 AA.
 - Use headings in logical order.
 - Use landmarks: header, nav, main, aside.
 - Announce validation and reward updates with appropriate live regions.
+- Move focus into the level-up dialog and return it after dismissal.
 - Provide text for icons and stars.
 - Associate labels and instructions with editor controls.
 
@@ -687,6 +745,7 @@ Target WCAG 2.2 AA.
 - Respect `prefers-reduced-motion`.
 - Avoid mandatory confetti or large movement.
 - Celebrations must not block progress.
+- Level-up effects should use opacity/scale sparingly and have a reduced-motion equivalent.
 
 ### Touch
 
@@ -787,6 +846,8 @@ Create variants and states for:
 - Tooltip
 - Toast
 - Modal/result dialog
+- Player status panel
+- Level-up celebration
 - Empty state
 - Skeleton
 - Form control
@@ -847,6 +908,8 @@ Research questions:
 - Does the weekly league motivate or discourage?
 - Is the semester-reset batch leaderboard useful and understood?
 - Do learners understand that lifetime XP and levels do not reset?
+- Do learners notice and understand the persistent player-status panel?
+- Do level-up celebrations feel rewarding without delaying study?
 - Do comeback bonuses feel supportive rather than manipulative?
 - Can students recover editor work after an error?
 
@@ -891,6 +954,8 @@ Name layers and components consistently. Include links to source icons and font 
 - Every lock explains how to unlock content.
 - XP, rating, academic score, and rank are visually and verbally distinct.
 - Completion result explains XP and star calculation.
+- Level changes trigger one accessible celebration before the completion result.
+- Player status consistently shows title, level progress, semester rank, and streak.
 - Replays clearly state whether XP is available.
 - Leaderboards show period, scope, formula, and current learner context.
 - Semester leaderboard clearly states its reset behavior and separates semester XP from lifetime XP.
