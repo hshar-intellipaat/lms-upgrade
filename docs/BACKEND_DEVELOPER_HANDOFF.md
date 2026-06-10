@@ -38,7 +38,7 @@ The production model should also support:
 - Beginner, Intermediate, and Advanced difficulty levels
 - Lessons, exercises, projects, quizzes, and assessments
 - Prerequisites and unlock rules
-- Cohort, semester, subject, section, and weekly leaderboards
+- Semester batch, subject, section, and weekly leaderboards
 - Instructor-authored content and versioning
 
 ## 3. Current Prototype Rules
@@ -59,6 +59,14 @@ earned_xp = 100 + (stars * 25)
 - Replaying an exercise awards no duplicate completion XP.
 - A replay can improve the learner's rating and personal bests.
 - Comeback bonus: `50 XP`, claimable once when eligible.
+
+Maintain three separate XP counters derived from the XP ledger:
+
+- `total_xp`: lifetime XP used for learner levels and long-term progression
+- `weekly_xp`: XP earned inside the active weekly league period
+- `semester_xp`: XP earned inside the active academic semester and used for the primary batch leaderboard
+
+When a semester closes, reset only `semester_xp` for the new period. Do not reset lifetime XP, learner level, ratings, personal bests, or completed learning content.
 
 ### Learner levels
 
@@ -134,6 +142,18 @@ The prototype ranks learners by weekly XP. Production leagues should:
 - Reset at a configured weekly boundary.
 - Display promotion, retention, and relegation zones if used.
 - Preserve weekly snapshots for history and audit.
+
+### Semester batch leaderboard
+
+The implemented primary batch leaderboard ranks all students in the active BTech cohort by `semester_xp`.
+
+- All cohort students begin the semester at `0 semester_xp`.
+- Rankings refresh whenever qualifying XP is awarded or reversed.
+- The leaderboard closes and becomes immutable when the semester is finalized.
+- A new leaderboard period starts at `0 semester_xp` for the next semester.
+- Lifetime XP and learner levels continue across semesters.
+- Previous-semester rankings remain available as historical snapshots.
+- The current prototype uses XP-only ranking. Production may adopt a balanced academic score after academic approval, but the scoring formula must remain fixed and explainable within a semester.
 
 ### Comeback bonus
 
@@ -371,6 +391,8 @@ The learner's total XP is the sum of valid ledger entries. A cached total is acc
 
 - `user_id`
 - `total_xp_cache`
+- `weekly_xp_cache`
+- `semester_xp_cache`
 - `current_level`
 - `current_streak`
 - `best_streak`
@@ -401,7 +423,7 @@ The learner's total XP is the sum of valid ledger entries. A cached total is acc
 #### `league_periods`
 
 - `id`
-- `type` (`weekly`, `semester`, `subject`, `cohort_overall`)
+- `type` (`weekly`, `semester_batch`, `subject`, `section`)
 - `starts_at`
 - `ends_at`
 - `status`
@@ -447,6 +469,7 @@ Recommended response:
   "gamification": {
     "totalXp": 515,
     "weeklyXp": 355,
+    "semesterXp": 515,
     "level": {
       "number": 3,
       "title": "Creator",
@@ -558,7 +581,7 @@ The backend:
 5. Awards first-completion XP through the ledger.
 6. Records qualifying streak activity.
 7. Updates unlocks and progress.
-8. Updates weekly/semester/cohort leaderboard aggregates.
+8. Updates weekly league and semester batch leaderboard aggregates.
 9. Returns the complete result.
 
 Response:
@@ -570,9 +593,16 @@ Response:
   "stars": 3,
   "earnedXp": 175,
   "totalXp": 515,
+  "weeklyXp": 355,
+  "semesterXp": 515,
   "level": {
     "number": 3,
     "leveledUp": true
+  },
+  "semesterLeaderboard": {
+    "rank": 9,
+    "previousRank": 11,
+    "rankChange": 2
   },
   "personalBestUpdates": {
     "fastestTime": true,
@@ -599,14 +629,13 @@ Return the awarded XP and updated level. A repeated request with the same idempo
 ### Leaderboards
 
 - `GET /api/v1/leaderboards/weekly`
-- `GET /api/v1/leaderboards/cohort`
-- `GET /api/v1/leaderboards/semester/{semesterId}`
+- `GET /api/v1/leaderboards/semesters/{semesterId}/batch`
 - `GET /api/v1/leaderboards/subjects/{subjectId}`
 
 Recommended query parameters:
 
-- `scope=cohort|section|campus|global`
-- `period=current|previous|all_time`
+- `scope=batch|section|campus`
+- `period=current|previous`
 - `cursor`
 - `limit`
 - `aroundMe=true`
@@ -622,9 +651,35 @@ Return:
 - Privacy-safe display name
 - Tie status
 
+Semester leaderboard response should include:
+
+```json
+{
+  "period": {
+    "semesterId": "uuid",
+    "name": "Semester 1",
+    "startsAt": "2026-07-01T00:00:00Z",
+    "endsAt": "2026-12-15T23:59:59Z",
+    "status": "active"
+  },
+  "cohort": {
+    "id": "uuid",
+    "name": "BTech CSE 2026",
+    "studentCount": 30
+  },
+  "currentLearner": {
+    "rank": 9,
+    "semesterXp": 515,
+    "topPercent": 30,
+    "xpToNextRank": 11
+  },
+  "entries": []
+}
+```
+
 ## 6. Ranking Rules
 
-Because BTech learners start together, support an overall cohort leaderboard, but do not make raw XP the only academic ranking signal.
+Because BTech learners start each semester together, the primary long-term competitive view is a semester batch leaderboard. It resets at the start of every semester while preserving immutable historical results.
 
 Recommended leaderboard types:
 
@@ -634,9 +689,15 @@ Recommended leaderboard types:
 - Purpose: short-term motivation and recovery
 - Reset: weekly in institution timezone
 
-### Cohort overall leaderboard
+### Semester batch leaderboard
 
-Recommended balanced score:
+Current prototype score:
+
+```text
+semester_score = semester_xp
+```
+
+Production option after academic approval:
 
 ```text
 50% assessment/exercise performance
@@ -645,13 +706,13 @@ Recommended balanced score:
 10% peer/code-review contribution
 ```
 
-The exact formula must be approved academically and versioned. Store both component scores and final score for explainability.
+If the balanced formula is adopted:
 
-### Semester leaderboard
-
-- Resets each semester.
-- Uses only work belonging to that semester.
-- Freeze and snapshot after result finalization.
+- Apply it only from the start of a new semester.
+- Version the formula.
+- Store each component score and the final score.
+- Never change the formula retroactively during an active semester.
+- Freeze and snapshot results after semester finalization.
 
 ### Tie-breaking
 
@@ -722,6 +783,7 @@ Store timestamps in UTC. Resolve calendar-day behavior using the institution tim
 Scheduled jobs:
 
 - Open and close weekly league periods
+- Open the next semester batch leaderboard with all scores at zero
 - Recalculate/finalize rankings
 - Create leaderboard snapshots
 - Promote/relegate league members
@@ -848,6 +910,8 @@ Important codes:
 - Streak update transaction
 - Exercise version mismatch
 - Leaderboard period rollover
+- Semester rollover resets semester XP but preserves lifetime XP
+- Previous-semester snapshots remain readable after rollover
 
 ### End-to-end tests
 
@@ -860,7 +924,7 @@ Important codes:
 
 ### Load tests
 
-- Leaderboard reads around weekly deadline
+- Leaderboard reads around weekly and semester deadlines
 - Bulk ranking calculation
 - Concurrent exercise submissions
 - Dashboard fan-out queries
@@ -875,6 +939,6 @@ Important codes:
 - Exercise history and rewards are auditable.
 - Replays can improve personal bests without farming completion XP.
 - Weekly and semester resets preserve immutable historical results.
+- Starting a new semester resets only period-specific semester XP.
 - Dashboard data can be returned in one or a small bounded number of requests.
 - All ranking and reward mutations are covered by automated tests.
-

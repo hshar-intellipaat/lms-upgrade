@@ -41,7 +41,7 @@ Learners should always know:
 
 ### Competition needs safeguards
 
-The product serves a BTech cohort whose students begin together. Cohort and semester leaderboards are relevant, but the interface should:
+The product serves a BTech cohort whose students begin each semester together. The primary batch leaderboard therefore resets every semester, while weekly leagues provide short-term competition. The interface should:
 
 - Emphasize improvement and nearby ranks, not only top performers
 - Provide aliases/privacy options where policy allows
@@ -127,7 +127,8 @@ Content:
 - Exercise ratings
 - Recent achievements
 - Weekly league summary
-- Link to full leaderboards
+- Current semester batch rank
+- Link to the full semester leaderboard
 
 ### Learning Journey
 
@@ -146,8 +147,8 @@ Purpose: compare progress within meaningful academic groups.
 Tabs/filters:
 
 - Weekly League
-- Cohort Overall
-- Semester
+- Semester Batch
+- Previous Semesters
 - Subject
 - Section
 
@@ -218,7 +219,7 @@ Example:
 /topics/html
 /topics/html/levels/beginner
 /exercises/html-tags-elements
-/leaderboards/cohort
+/leaderboards/semesters/current
 ```
 
 ## 6. Home Screen Requirements
@@ -261,6 +262,7 @@ Show:
 - Current level number and title
 - Total XP
 - XP earned this week
+- XP earned in the current semester
 - Progress to next level
 - Clear explanation link: "How XP works"
 
@@ -515,24 +517,46 @@ Show:
 - Promotion zone
 - Scoring explanation
 
-### Cohort Overall
+### Semester Batch
 
-Purpose: long-term BTech cohort comparison.
+Purpose: show the learner's overall standing in the batch for the active semester.
+
+The current implementation ranks all students using semester XP. The ranking resets when the next semester begins.
 
 Show:
 
+- Active semester name
 - Cohort and graduation year
-- Balanced score, not only raw XP
-- Component breakdown
-- Learner percentile
-- Section average
-- Nearby ranks
+- Total number of students
+- Learner's batch rank
+- Semester XP
+- Top-percent standing
+- XP needed to reach the next rank
+- Top three learners
+- Full batch ranking with the current learner highlighted
+- Clear message that rankings reset next semester
 
-### Semester and Subject
+The page must distinguish:
+
+- **Lifetime XP:** continues across the degree and drives learner level
+- **Semester XP:** resets each semester and drives batch rank
+- **Weekly XP:** resets weekly and drives the weekly league
+
+### Previous semesters
+
+Provide an archive selector for finalized semester results. Historical pages should be read-only and visibly labeled `Final`.
+
+Show:
+
+- Final rank
+- Final semester XP or approved score
+- Cohort size
+- Change compared with the previous semester, if meaningful
+
+### Subject and section filters
 
 Provide filters for:
 
-- Semester
 - Subject
 - Section
 - Campus, if applicable
@@ -563,6 +587,17 @@ Support:
 | Level up | Dedicated celebration, level title, next target |
 | API pending | Disable duplicate action, show progress |
 | API failed | Preserve result locally, offer retry without implying reward was saved |
+
+### Semester leaderboard
+
+| State | UI response |
+|---|---|
+| Active semester | Show live rank, semester XP, and next-rank gap |
+| Semester ending soon | Show end date without alarmist countdown behavior |
+| Finalizing | Temporarily label rankings as provisional |
+| Final | Freeze the table and label it as final |
+| New semester | Reset displayed semester XP/rank and explain that lifetime XP is unchanged |
+| No cohort assignment | Show an administrative empty state |
 
 ### Comeback offer
 
@@ -661,7 +696,7 @@ Target WCAG 2.2 AA.
 ### Cognitive accessibility
 
 - Keep scoring explanations short and available on demand.
-- Use consistent terms: XP, level, streak, rating, rank.
+- Use consistent terms: lifetime XP, semester XP, weekly XP, level, streak, rating, rank.
 - Avoid unexplained abbreviations.
 
 ## 15. Responsive Breakpoints
@@ -810,7 +845,8 @@ Research questions:
 - Do they understand why an exercise or level is locked?
 - Are star criteria perceived as fair?
 - Does the weekly league motivate or discourage?
-- Is the cohort leaderboard useful?
+- Is the semester-reset batch leaderboard useful and understood?
+- Do learners understand that lifetime XP and levels do not reset?
 - Do comeback bonuses feel supportive rather than manipulative?
 - Can students recover editor work after an error?
 
@@ -857,8 +893,8 @@ Name layers and components consistently. Include links to source icons and font 
 - Completion result explains XP and star calculation.
 - Replays clearly state whether XP is available.
 - Leaderboards show period, scope, formula, and current learner context.
+- Semester leaderboard clearly states its reset behavior and separates semester XP from lifetime XP.
 - All screens have loading, empty, error, and offline states.
 - Core flows work with keyboard only.
 - Mobile exercise flow remains usable without horizontal scrolling.
 - Designs meet WCAG 2.2 AA contrast and interaction requirements.
-
